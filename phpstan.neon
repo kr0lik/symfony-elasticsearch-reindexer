@@ -1,0 +1,15 @@
+includes:
+  - vendor/kr0lik/phpstan-rules/general-extension.neon
+  - vendor/kr0lik/phpstan-rules/phpunit-extension.neon
+  - vendor/phpstan/phpstan-symfony/extension.neon
+
+parameters:
+  ignoreErrors:
+    - '#Elasticsearch\\Common\\Exceptions\\Missing404Exception is never thrown in the corresponding try block#'
+    -
+      message: '#Call to an undefined method Symfony\\Component\\Config\\Definition\\Builder\\NodeParentInterface::.+#'
+      path: src/DependencyInjection/Configuration.php
+    - '#PHPDoc tag @throws with type .+ is not compatible with parent#'
+    -
+      message: "#Casting to int something that's already int\\.#"
+      path: src/Command/CreateIndexElasticSearchCommand.php

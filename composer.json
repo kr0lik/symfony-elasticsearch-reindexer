@@ -1,0 +1,36 @@
+{
+    "name": "kr0lik/elasticsearch-reindexer",
+    "type": "symfony-bundle",
+    "description": "ElasticSearch change fields type and reindex command",
+    "license": "proprietary",
+    "require": {
+        "php": "^7.3",
+        "elasticsearch/elasticsearch": "~6.0",
+        "symfony/config": "^4.3 || ^5.0",
+        "symfony/console": "^4.3 || ^5.0",
+        "symfony/dependency-injection": "^4.3 || ^5.0",
+        "symfony/http-kernel": "^4.3 || ^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "kr0lik\\ElasticSearchReindex\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "kr0lik\\ElasticSearchReindex\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "kr0lik/php-cs-fixer": "^1.0",
+        "kr0lik/phpstan-rules": "^1.0",
+        "phpstan/phpstan-symfony": "^0.12.11",
+        "phpunit/phpunit": "^9.4"
+    },
+    "config": {
+        "preferred-install": {
+            "*": "dist"
+        },
+        "bin-dir": "bin"
+    }
+}

@@ -1,0 +1,41 @@
+services:
+  es_reindex_elasticsearch_client:
+    class: Elasticsearch\Client
+    factory: [ 'Elasticsearch\ClientBuilder', 'fromConfig' ]
+    arguments:
+      - hosts:
+        - host: '%es_reindex.connection.host%'
+          port: '%es_reindex.connection.port%'
+          user: '%es_reindex.connection.user%'
+          pass: '%es_reindex.connection.pass%'
+
+  kr0lik\ElasticSearchReindex\Service\IndicesDataGetter:
+    arguments:
+      $indicesData: '%es_reindex.indices%'
+
+  kr0lik\ElasticSearchReindex\Service\ElasticSearchService:
+    arguments:
+      $esClient: '@es_reindex_elasticsearch_client'
+
+  kr0lik\ElasticSearchReindex\Service\IndexNameGetter:
+    arguments:
+      $service: '@kr0lik\ElasticSearchReindex\Service\ElasticSearchService'
+
+  kr0lik\ElasticSearchReindex\Service\IndexCreator:
+    arguments:
+      $service: '@kr0lik\ElasticSearchReindex\Service\ElasticSearchService'
+      $indicesDataGetter: '@kr0lik\ElasticSearchReindex\Service\IndicesDataGetter'
+
+  kr0lik\ElasticSearchReindex\Service\Reindexer:
+    arguments:
+      $service: '@kr0lik\ElasticSearchReindex\Service\ElasticSearchService'
+
+  kr0lik\ElasticSearchReindex\Command\CreateIndexElasticSearchCommand:
+    arguments:
+      $getter: '@kr0lik\ElasticSearchReindex\Service\IndexNameGetter'
+      $service: '@kr0lik\ElasticSearchReindex\Service\ElasticSearchService'
+      $reindexer: '@kr0lik\ElasticSearchReindex\Service\Reindexer'
+      $indicesDataGetter: '@kr0lik\ElasticSearchReindex\Service\IndicesDataGetter'
+
+    tags:
+      - 'console.command'
