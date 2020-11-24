@@ -95,23 +95,23 @@ class CreateIndexElasticSearchCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        /** @var int $reindexCheckTimeout */
-        $reindexCheckTimeout = $input->getOption(self::OPTION_REINDEX_CHECK_TIMEOUT);
-        $reindexCheckTimeout = (int) $reindexCheckTimeout * 1000;
-        /** @var string $baseIndexName */
-        $baseIndexName = $input->getArgument(self::ARGUMENT_INDEX_NAME);
+        $reindexCheckTimeout = (int) $input->getOption(self::OPTION_REINDEX_CHECK_TIMEOUT);
+        $baseIndexName = (string) $input->getArgument(self::ARGUMENT_INDEX_NAME);
 
+        $reindexCheckTimeout = $reindexCheckTimeout * 1000;
+        
         $oldIndexName = null;
 
         try {
             $oldIndexName = $this->getter->getOldIndexName($baseIndexName);
-
+            
             $output->writeln("<comment>Old index: {$oldIndexName}.</comment>");
         } catch (IndexNotExistException $exception) {
             $output->writeln('<comment>Old index not exists.</comment>');
         }
 
         $newIndexName = $this->getter->getNewIndexName($oldIndexName ?? $baseIndexName);
+        
         $output->writeln("<info>New index: {$newIndexName}.</info>");
 
         try {
@@ -133,7 +133,7 @@ class CreateIndexElasticSearchCommand extends Command
 
                 try {
                     $this->service->deleteIndex($newIndexName);
-
+                    
                     $output->writeln('<info>New index was deleted.</info>');
                 } catch (DeleteIndexException $exception) {
                     $output->writeln('<error>New index delete error.</error>');
@@ -147,7 +147,7 @@ class CreateIndexElasticSearchCommand extends Command
 
         try {
             $this->service->createAlias($baseIndexName, $newIndexName, $oldIndexName);
-
+            
             $output->writeln('<info>Alias updated.</info>');
         } catch (CreateAliasException $exception) {
             $output->writeln('<error>Alias update error.</error>');
@@ -170,7 +170,7 @@ class CreateIndexElasticSearchCommand extends Command
             $newIndexTotalDocuments = $newIndexInfo->getTotalDocuments();
 
             $fromTime = $newIndexInfo->getLastUpdatedDocumentTime();
-
+            
             $output->writeln(sprintf('<info>Reindexing from time: %d.</info>', $fromTime));
 
             $progressBar = new ProgressBar($output);
