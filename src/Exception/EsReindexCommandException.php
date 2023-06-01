@@ -7,7 +7,7 @@ namespace kr0lik\ElasticSearchReindex\Exception;
 use Exception;
 use Throwable;
 
-abstract class EsReindexException extends Exception
+abstract class EsReindexCommandException extends Exception
 {
     public function __construct(string $message = '', ?Throwable $previous = null)
     {

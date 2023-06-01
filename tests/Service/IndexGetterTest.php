@@ -4,45 +4,42 @@ declare(strict_types=1);
 
 namespace kr0lik\ElasticSearchReindex\Tests\Service;
 
+use kr0lik\ElasticSearchReindex\Dto\IndexData;
+use kr0lik\ElasticSearchReindex\Exception\CreateIndexException;
 use kr0lik\ElasticSearchReindex\Exception\IndexNotExistException;
 use kr0lik\ElasticSearchReindex\Service\ElasticSearchService;
-use kr0lik\ElasticSearchReindex\Service\IndexNameGetter;
+use kr0lik\ElasticSearchReindex\Service\IndexGetter;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\MockObject\RuntimeException;
 use PHPUnit\Framework\TestCase;
 use SebastianBergmann\RecursionContext\InvalidArgumentException;
 
 /**
  * @internal
- * @coversNothing
  */
-class IndexNameGetterTest extends TestCase
+class IndexGetterTest extends TestCase
 {
     /**
      * @var ElasticSearchService|MockObject
      */
     private $service;
-    /**
-     * @var IndexNameGetter
-     */
-    private $getter;
+    private IndexGetter $getter;
 
     public function setUp(): void
     {
         $this->service = $this->createMock(ElasticSearchService::class);
 
-        $this->getter = new IndexNameGetter($this->service);
+        $this->getter = new IndexGetter($this->service);
     }
 
     /**
      * @dataProvider getNewIndexData
      *
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
+     * @throws CreateIndexException
      * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      */
-    public function testGetNewIndexNameSuccess(string $expectedIndex, string $actualIndex): void
+    public function testGetNewIndexName(string $expectedIndex, string $actualIndex): void
     {
         $this->service->expects(self::once())
             ->method('isIndexExist')
@@ -51,18 +48,38 @@ class IndexNameGetterTest extends TestCase
             })
         ;
 
-        $result = $this->getter->getNewIndexName($expectedIndex);
+        $indexData = new IndexData($actualIndex, []);
+        $result = $this->getter->getNewIndexName($expectedIndex, $indexData);
 
         self::assertEquals($actualIndex, $result);
     }
 
     /**
+     * @throws CreateIndexException
+     */
+    public function testGetNewIndexNameFailure(): void
+    {
+        $this->service->expects(self::once())
+            ->method('isIndexExist')
+            ->willReturn(false)
+        ;
+        $this->service->expects(self::once())
+            ->method('createIndex')
+            ->willThrowException(new CreateIndexException())
+        ;
+
+        $this->expectException(CreateIndexException::class);
+
+        $indexData = new IndexData('some-index', []);
+        $this->getter->getNewIndexName('some-index', $indexData);
+    }
+
+    /**
      * @dataProvider getOldIndexData
      *
-     * @throws IndexNotExistException
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
      * @throws ExpectationFailedException
+     * @throws IndexNotExistException
+     * @throws InvalidArgumentException
      */
     public function testGetOldIndexNameWithAlias(string $expectedIndex, string $actualIndex): void
     {
@@ -87,10 +104,9 @@ class IndexNameGetterTest extends TestCase
     /**
      * @dataProvider getOldIndexData
      *
-     * @throws IndexNotExistException
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
      * @throws ExpectationFailedException
+     * @throws IndexNotExistException
+     * @throws InvalidArgumentException
      */
     public function testGetOldIndexNameWithoutAlias(string $expectedIndex): void
     {
@@ -109,7 +125,6 @@ class IndexNameGetterTest extends TestCase
     }
 
     /**
-     * @throws RuntimeException
      * @throws IndexNotExistException
      */
     public function testGetOldIndexNameFailure(): void

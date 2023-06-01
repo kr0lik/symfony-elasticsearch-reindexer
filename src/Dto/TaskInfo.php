@@ -4,33 +4,22 @@ declare(strict_types=1);
 
 namespace kr0lik\ElasticSearchReindex\Dto;
 
-class TaskInfoDto
+class TaskInfo
 {
-    /**
-     * @var bool
-     */
-    private $completed;
+    private bool $isCompleted;
+    private int $total;
+    private int $processed;
 
-    /**
-     * @var int
-     */
-    private $total;
-
-    /**
-     * @var int
-     */
-    private $processed;
-
-    public function __construct(bool $completed, int $total, int $processed)
+    public function __construct(bool $isCompleted, int $total, int $processed)
     {
-        $this->completed = $completed;
+        $this->isCompleted = $isCompleted;
         $this->total = $total;
         $this->processed = $processed;
     }
 
     public function isCompleted(): bool
     {
-        return $this->completed;
+        return $this->isCompleted;
     }
 
     public function getTotal(): int

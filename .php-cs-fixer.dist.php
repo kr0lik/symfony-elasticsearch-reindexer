@@ -1,8 +1,8 @@
 <?php
 
-$config = kr0lik\CodeStyleFixer\Config::create();
+$config = new kr0lik\CodeStyleFixer\Config;
 $config->getFinder()->in(__DIR__.'/src');
 $config->getFinder()->in(__DIR__.'/tests');
 $config->setCacheFile(__DIR__ . '/.php_cs.cache');
-$config->setRules($config->getRules() + ['@Symfony' => true]);
+
 return $config;

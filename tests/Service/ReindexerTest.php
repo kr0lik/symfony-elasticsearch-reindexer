@@ -4,21 +4,20 @@ declare(strict_types=1);
 
 namespace kr0lik\ElasticSearchReindex\Tests\Service;
 
-use kr0lik\ElasticSearchReindex\Dto\IndexInfoDto;
-use kr0lik\ElasticSearchReindex\Dto\TaskInfoDto;
+use kr0lik\ElasticSearchReindex\Dto\IndexData;
+use kr0lik\ElasticSearchReindex\Dto\IndexInfo;
+use kr0lik\ElasticSearchReindex\Dto\TaskInfo;
 use kr0lik\ElasticSearchReindex\Exception\InvalidResponseBodyException;
 use kr0lik\ElasticSearchReindex\Exception\TaskNotFoundException;
 use kr0lik\ElasticSearchReindex\Service\ElasticSearchService;
 use kr0lik\ElasticSearchReindex\Service\Reindexer;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\MockObject\RuntimeException;
 use PHPUnit\Framework\TestCase;
 use SebastianBergmann\RecursionContext\InvalidArgumentException;
 
 /**
  * @internal
- * @coversNothing
  */
 class ReindexerTest extends TestCase
 {
@@ -26,10 +25,7 @@ class ReindexerTest extends TestCase
      * @var ElasticSearchService|MockObject
      */
     private $service;
-    /**
-     * @var Reindexer
-     */
-    private $reindexer;
+    private Reindexer $reindexer;
 
     public function setUp(): void
     {
@@ -39,11 +35,10 @@ class ReindexerTest extends TestCase
     }
 
     /**
-     * @throws InvalidResponseBodyException
-     * @throws TaskNotFoundException
-     * @throws RuntimeException
      * @throws ExpectationFailedException
      * @throws InvalidArgumentException
+     * @throws InvalidResponseBodyException
+     * @throws TaskNotFoundException
      *
      * @dataProvider getReindexData
      */
@@ -56,12 +51,12 @@ class ReindexerTest extends TestCase
         $this->service->expects(self::any())
             ->method('getTaskInfo')
             ->willReturnOnConsecutiveCalls(
-                new TaskInfoDto(
+                new TaskInfo(
                     false,
                     $oldIndexDocs,
                     $middleDocs
                 ),
-                new TaskInfoDto(
+                new TaskInfo(
                     true,
                     $oldIndexDocs,
                     $oldIndexDocs
@@ -69,12 +64,16 @@ class ReindexerTest extends TestCase
             )
         ;
 
+        $oldIndexInfo = new IndexInfo('old-index', 0, $oldIndexDocs);
+        $newIndexInfo = new IndexInfo('new-index', 0, $oldIndexDocs);
+        $indexData = new IndexData('old-index', []);
+
         $chekTime = time();
+
         foreach ($this->reindexer->reindex(
-            'old-index',
-            'new-index',
-            $oldIndexDocs,
-            0,
+            $oldIndexInfo,
+            $newIndexInfo,
+            $indexData,
             1 * 1000 * 1000
         ) as $i => $processed) {
             ++$chekTime;
@@ -91,7 +90,6 @@ class ReindexerTest extends TestCase
     /**
      * @throws InvalidResponseBodyException
      * @throws TaskNotFoundException
-     * @throws RuntimeException
      */
     public function testReindexInvalidResponse(): void
     {
@@ -102,11 +100,14 @@ class ReindexerTest extends TestCase
 
         $this->expectException(InvalidResponseBodyException::class);
 
+        $oldIndexInfo = new IndexInfo('old-index', 0, 100);
+        $newIndexInfo = new IndexInfo('new-index', 0, 0);
+        $indexData = new IndexData('old-index', []);
+
         $this->reindexer->reindex(
-            'old-index',
-            'new-index',
-            100,
-            0,
+            $oldIndexInfo,
+            $newIndexInfo,
+            $indexData,
             1 * 1000 * 1000
         )->next();
     }
@@ -114,11 +115,10 @@ class ReindexerTest extends TestCase
     /**
      * @dataProvider getReindexData
      *
+     * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      * @throws InvalidResponseBodyException
      * @throws TaskNotFoundException
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
-     * @throws ExpectationFailedException
      */
     public function testReindexSuccessWithTaskNotFound(int $oldIndexDocs): void
     {
@@ -135,12 +135,16 @@ class ReindexerTest extends TestCase
             ->willReturn($oldIndexDocs)
         ;
 
+        $oldIndexInfo = new IndexInfo('old-index', 0, $oldIndexDocs);
+        $newIndexInfo = new IndexInfo('new-index', 0, $oldIndexDocs);
+        $indexData = new IndexData('old-index', []);
+
         $chekTime = time();
+
         foreach ($this->reindexer->reindex(
-            'old-index',
-            'new-index',
-            $oldIndexDocs,
-            0,
+            $oldIndexInfo,
+            $newIndexInfo,
+            $indexData,
             1 * 1000 * 1000
         ) as $i => $processed) {
             $chekTime += 3;
@@ -156,7 +160,6 @@ class ReindexerTest extends TestCase
      *
      * @throws InvalidResponseBodyException
      * @throws TaskNotFoundException
-     * @throws RuntimeException
      */
     public function testReindexFailureWithTaskNotFound(int $oldIndexDocs, int $middleDocs): void
     {
@@ -175,47 +178,39 @@ class ReindexerTest extends TestCase
 
         $this->expectException(TaskNotFoundException::class);
 
+        $oldIndexInfo = new IndexInfo('old-index', 0, $oldIndexDocs);
+        $newIndexInfo = new IndexInfo('new-index', 0, $oldIndexDocs);
+        $indexData = new IndexData('old-index', []);
+
         $this->reindexer->reindex(
-            'old-index',
-            'new-index',
-            $oldIndexDocs,
-            0,
+            $oldIndexInfo,
+            $newIndexInfo,
+            $indexData,
             1 * 1000 * 1000
         )->next();
     }
 
     /**
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
      * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      *
      * @dataProvider getIsNeedReindexData
      */
-    public function testIsNeedReindex(bool $isNeedReindex, int $oldDocs, int $newDocs, int $oldTotalDocs, int $newTotalDocs): void
+    public function testIsNeedReindex(bool $isNeedReindex, int $oldTotalDocs, int $newTotalDocs): void
     {
         $this->service->expects(self::any())
             ->method('getIndexInfo')
             ->willReturnMap(
                 [
-                    ['old-index', new IndexInfoDto(time(), $oldDocs)],
-                    ['new-index', new IndexInfoDto(time(), $newDocs)],
+                    ['old-index', new IndexInfo('old-index', 0, $oldTotalDocs)],
+                    ['new-index', new IndexInfo('new-index', 0, $newTotalDocs)],
                 ]
             )
         ;
 
-        foreach (range(1, 11) as $i) {
-            $result = $this->reindexer->isNeedReindex(
-                'old-index',
-                'new-index',
-                $oldTotalDocs,
-                $newTotalDocs
-            );
+        $result = $this->reindexer->isNeedReindex('old-index', 'new-index');
 
-            $isLastIteration = 11 === $i;
-            $expected = $isLastIteration ? $isNeedReindex : false;
-
-            self::assertEquals($expected, $result);
-        }
+        self::assertEquals($isNeedReindex, $result);
     }
 
     /**
@@ -243,15 +238,11 @@ class ReindexerTest extends TestCase
         return [
             [
                 'isNeedReindex' => true,
-                'oldDocs' => 200,
-                'newDocs' => 150,
-                'oldTotalDocs' => 100,
+                'oldTotalDocs' => 200,
                 'newTotalDocs' => 100,
             ],
             [
                 'isNeedReindex' => false,
-                'oldDocs' => 100,
-                'newDocs' => 100,
                 'oldTotalDocs' => 100,
                 'newTotalDocs' => 100,
             ],

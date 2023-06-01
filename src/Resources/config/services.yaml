@@ -17,14 +17,9 @@ services:
     arguments:
       $esClient: '@es_reindex_elasticsearch_client'
 
-  kr0lik\ElasticSearchReindex\Service\IndexNameGetter:
+  kr0lik\ElasticSearchReindex\Service\IndexGetter:
     arguments:
       $service: '@kr0lik\ElasticSearchReindex\Service\ElasticSearchService'
-
-  kr0lik\ElasticSearchReindex\Service\IndexCreator:
-    arguments:
-      $service: '@kr0lik\ElasticSearchReindex\Service\ElasticSearchService'
-      $indicesDataGetter: '@kr0lik\ElasticSearchReindex\Service\IndicesDataGetter'
 
   kr0lik\ElasticSearchReindex\Service\Reindexer:
     arguments:
@@ -32,7 +27,7 @@ services:
 
   kr0lik\ElasticSearchReindex\Command\CreateIndexElasticSearchCommand:
     arguments:
-      $getter: '@kr0lik\ElasticSearchReindex\Service\IndexNameGetter'
+      $getter: '@kr0lik\ElasticSearchReindex\Service\IndexGetter'
       $service: '@kr0lik\ElasticSearchReindex\Service\ElasticSearchService'
       $reindexer: '@kr0lik\ElasticSearchReindex\Service\Reindexer'
       $indicesDataGetter: '@kr0lik\ElasticSearchReindex\Service\IndicesDataGetter'

@@ -4,12 +4,18 @@
     "description": "ElasticSearch change fields type and reindex command",
     "license": "proprietary",
     "require": {
-        "php": "^7.3",
+        "php": ">=7.4",
         "elasticsearch/elasticsearch": "~6.0",
-        "symfony/config": "^4.3 || ^5.0",
-        "symfony/console": "^4.3 || ^5.0",
-        "symfony/dependency-injection": "^4.3 || ^5.0",
-        "symfony/http-kernel": "^4.3 || ^5.0"
+        "symfony/config": "^5.2",
+        "symfony/console": "^5.2",
+        "symfony/dependency-injection": "^5.2",
+        "symfony/http-kernel": "^5.2"
+    },
+    "require-dev": {
+        "kr0lik/php-cs-fixer": "^2.0",
+        "kr0lik/phpstan-rules": "^2.0",
+        "icanhazstring/composer-unused": "^0.8",
+        "phpunit/phpunit": "^9.6"
     },
     "autoload": {
         "psr-4": {
@@ -21,16 +27,14 @@
             "kr0lik\\ElasticSearchReindex\\Tests\\": "tests/"
         }
     },
-    "require-dev": {
-        "kr0lik/php-cs-fixer": "^1.0",
-        "kr0lik/phpstan-rules": "^1.0",
-        "phpstan/phpstan-symfony": "^0.12.11",
-        "phpunit/phpunit": "^9.4"
-    },
     "config": {
         "preferred-install": {
             "*": "dist"
         },
-        "bin-dir": "bin"
+        "bin-dir": "bin",
+        "sort-packages": true,
+        "allow-plugins": {
+            "icanhazstring/composer-unused": true
+        }
     }
 }

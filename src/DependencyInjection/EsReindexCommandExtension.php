@@ -12,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
-class EsReindexExtension extends Extension
+class EsReindexCommandExtension extends Extension
 {
     /**
      * @param array<mixed> $configs
