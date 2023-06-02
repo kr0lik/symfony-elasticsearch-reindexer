@@ -4,22 +4,17 @@ declare(strict_types=1);
 
 namespace kr0lik\ElasticSearchReindex\Dto;
 
-class IndexInfoDto
+class IndexInfo
 {
-    /**
-     * @var int
-     */
-    private $lastUpdatedDocumentTime;
+    private int $lastUpdatedDocumentTime;
+    private int $totalDocuments;
+    private string $name;
 
-    /**
-     * @var int
-     */
-    private $totalDocuments;
-
-    public function __construct(int $lastUpdatedDocumentTime, int $totalDocuments)
+    public function __construct(string $name, int $lastUpdatedDocumentTime, int $totalDocuments)
     {
         $this->lastUpdatedDocumentTime = $lastUpdatedDocumentTime;
         $this->totalDocuments = $totalDocuments;
+        $this->name = $name;
     }
 
     public function getLastUpdatedDocumentTime(): int
@@ -30,5 +25,10 @@ class IndexInfoDto
     public function getTotalDocuments(): int
     {
         return $this->totalDocuments;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 }

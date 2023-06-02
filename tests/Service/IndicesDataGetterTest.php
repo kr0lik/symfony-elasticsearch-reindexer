@@ -13,7 +13,6 @@ use SebastianBergmann\RecursionContext\InvalidArgumentException;
 
 /**
  * @internal
- * @coversNothing
  */
 class IndicesDataGetterTest extends TestCase
 {
@@ -38,7 +37,7 @@ class IndicesDataGetterTest extends TestCase
             'empty name at 0 position' => [
                 'indicesData' => [
                     [
-                        'create_body' => [],
+                        'body' => [],
                     ],
                 ],
                 'exception' => IndicesWrongCongigurationException::class,
@@ -48,53 +47,53 @@ class IndicesDataGetterTest extends TestCase
                 'indicesData' => [
                     [
                         'name' => 'some name',
-                        'create_body' => [],
+                        'body' => [],
                     ],
                     [
-                        'create_body' => [],
+                        'body' => [],
                     ],
                 ],
                 'exception' => IndicesWrongCongigurationException::class,
                 'exceptionMessage' => 'Wrong configured index name at position 1.',
             ],
-            'empty create_body at 0 position' => [
+            'empty body at 0 position' => [
                 'indicesData' => [
                     [
                         'name' => 'some name',
                     ],
                 ],
                 'exception' => IndicesWrongCongigurationException::class,
-                'exceptionMessage' => 'Wrong configured index create_body at position 0.',
+                'exceptionMessage' => 'Wrong configured index body at position 0.',
             ],
-            'create_body not array at 0 position 1' => [
+            'body not array at 0 position 1' => [
                 'indicesData' => [
                     [
                         'name' => 'some name',
-                        'create_body' => 'value',
+                        'body' => 'value',
                     ],
                 ],
                 'exception' => IndicesWrongCongigurationException::class,
-                'exceptionMessage' => 'Wrong configured index create_body at position 0.',
+                'exceptionMessage' => 'Wrong configured index body at position 0.',
             ],
-            'create_body not array at 0 position 2' => [
+            'body not array at 0 position 2' => [
                 'indicesData' => [
                     [
                         'name' => 'some name',
-                        'create_body' => null,
+                        'body' => null,
                     ],
                 ],
                 'exception' => IndicesWrongCongigurationException::class,
-                'exceptionMessage' => 'Wrong configured index create_body at position 0.',
+                'exceptionMessage' => 'Wrong configured index body at position 0.',
             ],
-            'create_body not array at 0 position 3' => [
+            'body not array at 0 position 3' => [
                 'indicesData' => [
                     [
                         'name' => 'some name',
-                        'create_body' => 123,
+                        'body' => 123,
                     ],
                 ],
                 'exception' => IndicesWrongCongigurationException::class,
-                'exceptionMessage' => 'Wrong configured index create_body at position 0.',
+                'exceptionMessage' => 'Wrong configured index body at position 0.',
             ],
         ];
     }
@@ -125,13 +124,13 @@ class IndicesDataGetterTest extends TestCase
                 'indicesData' => [
                     [
                         'name' => 'index1',
-                        'create_body' => [
+                        'body' => [
                             'key1' => 'val1',
                         ],
                     ],
                     [
                         'name' => 'index2',
-                        'create_body' => [
+                        'body' => [
                             'key2' => 'val2',
                         ],
                     ],
@@ -145,13 +144,13 @@ class IndicesDataGetterTest extends TestCase
                 'indicesData' => [
                     [
                         'name' => 'index1',
-                        'create_body' => [
+                        'body' => [
                             'key1' => 'val1',
                         ],
                     ],
                     [
                         'name' => 'index2',
-                        'create_body' => [
+                        'body' => [
                             'key2' => 'val2',
                         ],
                     ],
@@ -170,16 +169,16 @@ class IndicesDataGetterTest extends TestCase
      * @param array<int, array<string, mixed>> $indicesData
      * @param array<mixed>                     $expectBody
      *
+     * @throws ExpectationFailedException
      * @throws IndexNotConfiguredException
      * @throws IndicesWrongCongigurationException
      * @throws InvalidArgumentException
-     * @throws ExpectationFailedException
      */
     public function testGetIndexBody(array $indicesData, string $index, array $expectBody): void
     {
         $service = new IndicesDataGetter($indicesData);
 
-        self::assertEquals($expectBody, $service->getIndexBody($index));
+        self::assertEquals($expectBody, $service->getIndexData($index)->getBody());
     }
 
     /**
@@ -191,7 +190,7 @@ class IndicesDataGetterTest extends TestCase
         $indicesData = [
             [
                 'name' => 'index1',
-                'create_body' => [
+                'body' => [
                     'key1' => 'val1',
                 ],
             ],
@@ -202,6 +201,6 @@ class IndicesDataGetterTest extends TestCase
         $this->expectExceptionMessage('Index not-exists-name not configured.');
         $this->expectException(IndexNotConfiguredException::class);
 
-        $service->getIndexBody('not-exists-name');
+        $service->getIndexData('not-exists-name')->getBody();
     }
 }

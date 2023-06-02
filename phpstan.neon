@@ -1,7 +1,6 @@
 includes:
-  - vendor/kr0lik/phpstan-rules/general-extension.neon
-  - vendor/kr0lik/phpstan-rules/phpunit-extension.neon
-  - vendor/phpstan/phpstan-symfony/extension.neon
+  - vendor/kr0lik/phpstan-rules/extensions/general-extension-74.neon
+  - vendor/kr0lik/phpstan-rules/extensions/phpunit-extension.neon
 
 parameters:
   ignoreErrors:

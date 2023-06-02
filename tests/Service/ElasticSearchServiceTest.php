@@ -10,8 +10,8 @@ use Elasticsearch\Common\Exceptions\BadRequest400Exception;
 use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Elasticsearch\Namespaces\IndicesNamespace;
 use Elasticsearch\Namespaces\TasksNamespace;
-use kr0lik\ElasticSearchReindex\Dto\IndexInfoDto;
-use kr0lik\ElasticSearchReindex\Dto\TaskInfoDto;
+use kr0lik\ElasticSearchReindex\Dto\IndexInfo;
+use kr0lik\ElasticSearchReindex\Dto\TaskInfo;
 use kr0lik\ElasticSearchReindex\Exception\CreateAliasException;
 use kr0lik\ElasticSearchReindex\Exception\CreateIndexException;
 use kr0lik\ElasticSearchReindex\Exception\DeleteIndexException;
@@ -20,13 +20,11 @@ use kr0lik\ElasticSearchReindex\Exception\TaskNotFoundException;
 use kr0lik\ElasticSearchReindex\Service\ElasticSearchService;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\MockObject\RuntimeException;
 use PHPUnit\Framework\TestCase;
 use SebastianBergmann\RecursionContext\InvalidArgumentException;
 
 /**
  * @internal
- * @coversNothing
  */
 class ElasticSearchServiceTest extends TestCase
 {
@@ -42,13 +40,9 @@ class ElasticSearchServiceTest extends TestCase
      * @var Client|MockObject
      */
     private $esClient;
-    /**
-     * @var ElasticSearchService
-     */
-    private $service;
+    private ElasticSearchService $service;
 
     /**
-     * @throws RuntimeException
      * @throws BadMethodCallException
      */
     public function setUp(): void
@@ -71,9 +65,8 @@ class ElasticSearchServiceTest extends TestCase
     }
 
     /**
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
      * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      */
     public function testIsIndexExistTrue(): void
     {
@@ -88,9 +81,8 @@ class ElasticSearchServiceTest extends TestCase
     }
 
     /**
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
      * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      */
     public function testIsIndexExistFalse(): void
     {
@@ -105,11 +97,10 @@ class ElasticSearchServiceTest extends TestCase
     }
 
     /**
-     * @throws InvalidResponseBodyException
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
-     * @throws ExpectationFailedException
      * @throws BadMethodCallException
+     * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
+     * @throws InvalidResponseBodyException
      */
     public function testReindexSuccess(): void
     {
@@ -118,15 +109,14 @@ class ElasticSearchServiceTest extends TestCase
             ->willReturn(['task' => 'task-id'])
         ;
 
-        $result = $this->service->reindex('old-index', 'new-index', time());
+        $result = $this->service->reindex('old-index', 'new-index', time(), []);
 
         self::assertEquals('task-id', $result);
     }
 
     /**
-     * @throws InvalidResponseBodyException
-     * @throws RuntimeException
      * @throws BadMethodCallException
+     * @throws InvalidResponseBodyException
      */
     public function testReindexFailure(): void
     {
@@ -137,12 +127,11 @@ class ElasticSearchServiceTest extends TestCase
 
         $this->expectException(InvalidResponseBodyException::class);
 
-        $this->service->reindex('old-index', 'new-index', time());
+        $this->service->reindex('old-index', 'new-index', time(), []);
     }
 
     /**
      * @throws CreateAliasException
-     * @throws RuntimeException
      */
     public function testCreateAliasSuccess(): void
     {
@@ -158,7 +147,6 @@ class ElasticSearchServiceTest extends TestCase
 
     /**
      * @throws CreateAliasException
-     * @throws RuntimeException
      */
     public function testCreateAliasFailure(): void
     {
@@ -173,9 +161,8 @@ class ElasticSearchServiceTest extends TestCase
     }
 
     /**
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
      * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      */
     public function testIsAliasExistTrue(): void
     {
@@ -190,9 +177,8 @@ class ElasticSearchServiceTest extends TestCase
     }
 
     /**
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
      * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      */
     public function testIsAliasExistFalse(): void
     {
@@ -208,7 +194,6 @@ class ElasticSearchServiceTest extends TestCase
 
     /**
      * @throws CreateIndexException
-     * @throws RuntimeException
      */
     public function testCreateIndexSuccess(): void
     {
@@ -224,7 +209,6 @@ class ElasticSearchServiceTest extends TestCase
 
     /**
      * @throws CreateIndexException
-     * @throws RuntimeException
      */
     public function testCreateIndexFailure(): void
     {
@@ -240,7 +224,6 @@ class ElasticSearchServiceTest extends TestCase
 
     /**
      * @throws DeleteIndexException
-     * @throws RuntimeException
      */
     public function testDeleteIndexSuccess(): void
     {
@@ -256,7 +239,6 @@ class ElasticSearchServiceTest extends TestCase
 
     /**
      * @throws DeleteIndexException
-     * @throws RuntimeException
      */
     public function testDeleteIndexFailure(): void
     {
@@ -271,9 +253,8 @@ class ElasticSearchServiceTest extends TestCase
     }
 
     /**
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
      * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      */
     public function testGetIndexName(): void
     {
@@ -288,9 +269,8 @@ class ElasticSearchServiceTest extends TestCase
     }
 
     /**
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
      * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      */
     public function testGetIndexDocs(): void
     {
@@ -315,10 +295,9 @@ class ElasticSearchServiceTest extends TestCase
     }
 
     /**
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
-     * @throws ExpectationFailedException
      * @throws BadMethodCallException
+     * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      */
     public function testGetIndexInfo(): void
     {
@@ -342,14 +321,13 @@ class ElasticSearchServiceTest extends TestCase
 
         $result = $this->service->getIndexInfo('some-index');
 
-        self::assertEquals(new IndexInfoDto(1604596076, 100), $result);
+        self::assertEquals(new IndexInfo('some-index', 1604596076, 100), $result);
     }
 
     /**
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
-     * @throws ExpectationFailedException
      * @throws BadMethodCallException
+     * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      */
     public function testGetIndexInfoOnError(): void
     {
@@ -360,14 +338,13 @@ class ElasticSearchServiceTest extends TestCase
 
         $result = $this->service->getIndexInfo('some-index');
 
-        self::assertEquals(new IndexInfoDto(0, 0), $result);
+        self::assertEquals(new IndexInfo('some-index', 0, 0), $result);
     }
 
     /**
-     * @throws TaskNotFoundException
-     * @throws RuntimeException
-     * @throws InvalidArgumentException
      * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
+     * @throws TaskNotFoundException
      */
     public function testGetTaskInfoSuccess(): void
     {
@@ -388,12 +365,11 @@ class ElasticSearchServiceTest extends TestCase
 
         $result = $this->service->getTaskInfo('some-index');
 
-        self::assertEquals(new TaskInfoDto(true, 100, 100), $result);
+        self::assertEquals(new TaskInfo(true, 100, 100), $result);
     }
 
     /**
      * @throws TaskNotFoundException
-     * @throws RuntimeException
      */
     public function testGetTaskInfoFailure(): void
     {

@@ -7,20 +7,18 @@ namespace kr0lik\ElasticSearchReindex\Service;
 use Elasticsearch\Client;
 use Elasticsearch\Common\Exceptions\BadRequest400Exception;
 use Elasticsearch\Common\Exceptions\Missing404Exception;
-use kr0lik\ElasticSearchReindex\Dto\IndexInfoDto;
-use kr0lik\ElasticSearchReindex\Dto\TaskInfoDto;
+use kr0lik\ElasticSearchReindex\Dto\IndexInfo;
+use kr0lik\ElasticSearchReindex\Dto\TaskInfo;
 use kr0lik\ElasticSearchReindex\Exception\CreateAliasException;
 use kr0lik\ElasticSearchReindex\Exception\CreateIndexException;
 use kr0lik\ElasticSearchReindex\Exception\DeleteIndexException;
 use kr0lik\ElasticSearchReindex\Exception\InvalidResponseBodyException;
+use kr0lik\ElasticSearchReindex\Exception\SettingsIndexException;
 use kr0lik\ElasticSearchReindex\Exception\TaskNotFoundException;
 
 class ElasticSearchService
 {
-    /**
-     * @var Client
-     */
-    private $esClient;
+    private Client $esClient;
 
     public function __construct(Client $esClient)
     {
@@ -52,13 +50,18 @@ class ElasticSearchService
     }
 
     /**
+     * @param array<string, mixed> $script Associative array of parameters
+     *                                     $script['source'] = (string) The script to run to update the document source or metadata when reindexing.
+     *                                     $script['lang'] = (string) The script language: painless, expression, mustache, java
+     *
      * @throws InvalidResponseBodyException
      */
-    public function reindex(string $oldIndex, string $newIndex, int $fromTime): string
+    public function reindex(string $oldIndex, string $newIndex, int $fromTime, array $script): string
     {
-        $result = $this->esClient->reindex([
+        $params = [
             'wait_for_completion' => false,
             'body' => [
+                'conflicts' => 'abort',
                 'source' => [
                     'index' => $oldIndex,
                     'query' => [
@@ -75,8 +78,18 @@ class ElasticSearchService
                 'dest' => [
                     'index' => $newIndex,
                 ],
+                'script' => [
+                    'source' => 'ctx._source.doc.remove("timestamps")',
+                    'lang' => 'painless',
+                ],
             ],
-        ]);
+        ];
+
+        if ([] !== $script) {
+            $params['body']['script'] = $script;
+        }
+
+        $result = $this->esClient->reindex($params);
 
         if (!isset($result['task'])) {
             throw new InvalidResponseBodyException("No 'task' field in result");
@@ -85,7 +98,7 @@ class ElasticSearchService
         return $result['task'];
     }
 
-    public function getIndexInfo(string $index): IndexInfoDto
+    public function getIndexInfo(string $index): IndexInfo
     {
         try {
             $lastDocument = $this->esClient->search([
@@ -96,10 +109,11 @@ class ElasticSearchService
             // @phpstan-ignore-next-line
         } catch (BadRequest400Exception $e) {
             // в новом индексе без документов нет поля meta.cas
-            return new IndexInfoDto(0, 0);
+            return new IndexInfo($index, 0, 0);
         }
 
-        return new IndexInfoDto(
+        return new IndexInfo(
+            $index,
             $lastDocument['hits']['hits'][0]['_source']['meta']['cas'] ?? 0,
             $lastDocument['hits']['total']
         );
@@ -108,19 +122,19 @@ class ElasticSearchService
     /**
      * @throws TaskNotFoundException
      */
-    public function getTaskInfo(string $taskId): TaskInfoDto
+    public function getTaskInfo(string $taskId): TaskInfo
     {
         $tasks = $this->esClient->tasks();
 
         try {
             $task = $tasks->get(['task_id' => $taskId]);
         } catch (Missing404Exception $exception) {
-            throw new TaskNotFoundException('Задача не найдена ('.$taskId.')', $exception);
+            throw new TaskNotFoundException('Task not found ('.$taskId.')', $exception);
         }
 
         $taskStatus = $task['task']['status'];
 
-        return new TaskInfoDto(
+        return new TaskInfo(
             $task['completed'],
             $taskStatus['total'],
             $taskStatus['created'] + $taskStatus['updated'] + $taskStatus['deleted']
@@ -137,8 +151,7 @@ class ElasticSearchService
         $result = $this->esClient->indices()->create([
             'index' => $index,
             'body' => $createIndexBody,
-        ])
-        ;
+        ]);
 
         if (!$this->isAcknowledged($result)) {
             throw new CreateIndexException("Index `{$index}` don't created");
@@ -166,11 +179,48 @@ class ElasticSearchService
             'body' => [
                 'actions' => $actions,
             ],
-        ])
-        ;
+        ]);
 
         if (!$this->isAcknowledged($result)) {
             throw new CreateAliasException("Alias `{$alias}` on `{$newIndex}` don't created");
+        }
+    }
+
+    /**
+     * @throws SettingsIndexException
+     */
+    public function setRefreshInterval(string $index, string $value): void
+    {
+        $result = $this->esClient->indices()->putSettings([
+            'index' => $index,
+            'body' => [
+                'index' => [
+                    'refresh_interval' => $value,
+                ],
+            ],
+        ]);
+
+        if (!$this->isAcknowledged($result)) {
+            throw new SettingsIndexException("Refresh interval don't restored");
+        }
+    }
+
+    /**
+     * @throws SettingsIndexException
+     */
+    public function restoreReplicas(string $index): void
+    {
+        $result = $this->esClient->indices()->putSettings([
+            'index' => $index,
+            'body' => [
+                'index' => [
+                    'number_of_replicas' => 1,
+                ],
+            ],
+        ]);
+
+        if (!$this->isAcknowledged($result)) {
+            throw new SettingsIndexException("Refresh interval don't restored");
         }
     }
 
@@ -181,8 +231,7 @@ class ElasticSearchService
     {
         $result = $this->esClient->indices()->delete([
             'index' => $index,
-        ])
-        ;
+        ]);
 
         if (!$this->isAcknowledged($result)) {
             throw new DeleteIndexException("Index `{$index}` don't deleted");

@@ -13,7 +13,7 @@ composer require kr0lik/elasticsearch-reindexer
 ## Usage
 Add into config/bundles.php:
 ```
-kr0lik\ElasticSearchReindex\EsReindexCommandBundle::class => ['all' => true],
+kr0lik\ElasticSearchReindex\EsReindexBundle::class => ['all' => true],
 ```
 
 Add `config/packages/es_reindex.yaml`
@@ -29,7 +29,10 @@ es_reindex.yaml config example:
     indices:
       -
         name: '<first-index>'
-        create_body:
+        script:
+            source: 'ctx._source.doc.remove("timestamps")'
+            lang: painless
+        body:
           settings:
             index:
               max_result_window: 1000000
@@ -44,12 +47,13 @@ es_reindex.yaml config example:
               properties:
                 doc:
                   properties:
-                    accountId:
-                      type: long
+                    username:
+                      type: keyword
+                      normalizer: standard
 
       -
         name: '<second-index>'
-        create_body:
+        body:
           settings:
             index:
               max_result_window: 1000000
@@ -66,4 +70,9 @@ es_reindex.yaml config example:
                   properties:
                     accountId:
                       type: long
+```
+
+Run command:
+```
+bin/console elastic-search:create-index <index-name-from-config>
 ```
