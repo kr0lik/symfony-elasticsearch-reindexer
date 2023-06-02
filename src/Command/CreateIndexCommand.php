@@ -29,7 +29,7 @@ use Throwable;
 use function is_string;
 use function usleep;
 
-class CreateIndexElasticSearchCommand extends Command
+class CreateIndexCommand extends Command
 {
     private const REINDEX_CHECK_DEFAULT_TIMEOUT = '500'; // ms
     private const OPTION_REINDEX_CHECK_TIMEOUT = 'reindex-check-timeout';

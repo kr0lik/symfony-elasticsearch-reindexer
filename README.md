@@ -1,6 +1,8 @@
 # elasticsearch-reindexer
 ElasticSearch fields type change and reindex data
 
+For reindex will be created new index with alias.
+
 tested with es 6
 
 ## Installation
