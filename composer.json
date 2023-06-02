@@ -25,7 +25,10 @@
     "autoload-dev": {
         "psr-4": {
             "kr0lik\\ElasticSearchReindex\\Tests\\": "tests/"
-        }
+        },
+        "classmap": [
+            "tests/"
+        ]
     },
     "config": {
         "preferred-install": {

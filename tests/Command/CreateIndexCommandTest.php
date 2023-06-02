@@ -6,7 +6,7 @@ namespace kr0lik\ElasticSearchReindex\Tests\Command;
 
 use Elasticsearch\Common\Exceptions\BadMethodCallException;
 use Generator;
-use kr0lik\ElasticSearchReindex\Command\CreateIndexElasticSearchCommand;
+use kr0lik\ElasticSearchReindex\Command\CreateIndexCommand;
 use kr0lik\ElasticSearchReindex\Dto\IndexInfo;
 use kr0lik\ElasticSearchReindex\Exception\CreateIndexException;
 use kr0lik\ElasticSearchReindex\Exception\IndexNotExistException;
@@ -29,7 +29,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 /**
  * @internal
  */
-class CreateIndexElasticSearchCommandTest extends TestCase
+class CreateIndexCommandTest extends TestCase
 {
     private const OK_INDEX1 = 'test-index';
     private const OK_INDEX2 = 'other-test-index';
@@ -75,7 +75,7 @@ class CreateIndexElasticSearchCommandTest extends TestCase
         ]);
 
         $application = new Application();
-        $application->add(new CreateIndexElasticSearchCommand(
+        $application->add(new CreateIndexCommand(
             $this->getter,
             $this->service,
             $this->reindexer,
@@ -116,7 +116,7 @@ class CreateIndexElasticSearchCommandTest extends TestCase
 
         $this->commandTester->execute(['index-name' => self::OK_INDEX1]);
 
-        self::assertEquals(CreateIndexElasticSearchCommand::SUCCESS, $this->commandTester->getStatusCode());
+        self::assertEquals(CreateIndexCommand::SUCCESS, $this->commandTester->getStatusCode());
     }
 
     /**
@@ -150,7 +150,7 @@ class CreateIndexElasticSearchCommandTest extends TestCase
 
         $this->commandTester->execute(['index-name' => self::OK_INDEX2]);
 
-        self::assertEquals(CreateIndexElasticSearchCommand::SUCCESS, $this->commandTester->getStatusCode());
+        self::assertEquals(CreateIndexCommand::SUCCESS, $this->commandTester->getStatusCode());
     }
 
     /**
@@ -170,7 +170,7 @@ class CreateIndexElasticSearchCommandTest extends TestCase
 
         $this->commandTester->execute(['index-name' => self::OK_INDEX1]);
 
-        self::assertEquals(CreateIndexElasticSearchCommand::SUCCESS, $this->commandTester->getStatusCode());
+        self::assertEquals(CreateIndexCommand::SUCCESS, $this->commandTester->getStatusCode());
     }
 
     /**
@@ -190,7 +190,7 @@ class CreateIndexElasticSearchCommandTest extends TestCase
 
         $this->commandTester->execute(['index-name' => self::OK_INDEX1]);
 
-        self::assertEquals(CreateIndexElasticSearchCommand::FAILURE, $this->commandTester->getStatusCode());
+        self::assertEquals(CreateIndexCommand::FAILURE, $this->commandTester->getStatusCode());
     }
 
     /**
@@ -221,7 +221,7 @@ class CreateIndexElasticSearchCommandTest extends TestCase
 
         $this->commandTester->execute(['index-name' => self::OK_INDEX1]);
 
-        self::assertEquals(CreateIndexElasticSearchCommand::FAILURE, $this->commandTester->getStatusCode());
+        self::assertEquals(CreateIndexCommand::FAILURE, $this->commandTester->getStatusCode());
     }
 
     /**
@@ -252,7 +252,7 @@ class CreateIndexElasticSearchCommandTest extends TestCase
 
         $this->commandTester->execute(['index-name' => self::OK_INDEX1]);
 
-        self::assertEquals(CreateIndexElasticSearchCommand::FAILURE, $this->commandTester->getStatusCode());
+        self::assertEquals(CreateIndexCommand::FAILURE, $this->commandTester->getStatusCode());
     }
 
     /**
@@ -276,7 +276,7 @@ class CreateIndexElasticSearchCommandTest extends TestCase
 
         $this->commandTester->execute(['index-name' => 'not-exists-index']);
 
-        self::assertEquals(CreateIndexElasticSearchCommand::FAILURE, $this->commandTester->getStatusCode());
+        self::assertEquals(CreateIndexCommand::FAILURE, $this->commandTester->getStatusCode());
         self::assertEquals("Index not-exists-index not configured.\n", $this->commandTester->getDisplay());
     }
 }
